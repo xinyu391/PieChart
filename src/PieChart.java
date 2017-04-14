@@ -66,27 +66,24 @@ public class PieChart extends View {
     }
     // 计算角度，颜色
     private void preCalcute(){
-        //计算 颜色（最大->最小 按COLORS数字依次分配，所以先排序
-        ArrayList<PieChart.Entry> tmp = new ArrayList<>(mDataSet.size());
-        tmp.addAll(mDataSet);
-        Collections.sort(tmp);
-        int i = 0;
-        for(Entry e:tmp){
-            e.color= COLORS[i++];
-        }
-
-        if(mSortData){
-            Collections.sort(mDataSet);
-        }
         int count =0;
         for(Entry e:mDataSet){
             count+=e.value;
         }
         mCount =  count;
-        //计算角度
 
+        //计算 颜色（最大->最小 按COLORS数字依次分配，所以先排序
+        ArrayList<PieChart.Entry> tmp = new ArrayList<>(mDataSet.size());
+        tmp.addAll(mDataSet);
+        Collections.sort(tmp);
+
+        //计算角度,和颜色
         float arrearage = 0;
-        for(Entry e:mDataSet){
+        //从小到大依次计算角度，小的不够2度，就借下一个的
+        int size = tmp.size();
+        for(int i=size-1;i>=0;i--){
+            Entry e= tmp.get(i);
+            e.color= COLORS[i];
             e.angle = (360.0f*e.value)/count +arrearage;
             // 角度太小，就画不出来了,所以设置最小角度为2，把多占用的让下一个承担
             if(e.angle<2f) {
@@ -96,14 +93,12 @@ public class PieChart extends View {
                 arrearage=0;
             }
         }
-        if(arrearage<0){//最后还有欠费，就再循环一遍，让大家（下一个）分担下欠费
-            for(Entry e:mDataSet){
-                if(e.angle+arrearage>2) {
-                    e.angle += arrearage;
-                    break;
-                }
-            }
+
+
+        if(mSortData){
+            Collections.sort(mDataSet);
         }
+
     }
 
     //是否需要对数据进行排序
@@ -126,7 +121,7 @@ public class PieChart extends View {
     }
 
     // 上下padding
-    float padding = convertDpToPixel(20);
+    float padding = convertDpToPixel(10);
     // 大圆的半径
     float radius = convertDpToPixel(65);
     // 圆环的宽度
@@ -146,6 +141,11 @@ public class PieChart extends View {
     float lineStrokeWidth= convertDpToPixel(1);
     //阴影的半径
     float shadownRadisu = convertDpToPixel(2);
+    //小圆的间距
+    float spaceSmallCircle = convertDpToPixel(53);
+
+    Paint paint = new Paint();
+
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
@@ -159,7 +159,7 @@ public class PieChart extends View {
         float cy = radius+padding;
 
 
-        Paint paint = new Paint();
+
         paint.setAntiAlias(true);
         paint.setColor(Color.WHITE);
         float strokeWidth = paint.getStrokeWidth();
@@ -266,7 +266,7 @@ public class PieChart extends View {
         // 底部绘制 小圆圈，及label
         if(mDataSet.size()>2){
             float scx,scy;
-            float sdif =convertDpToPixel(50);
+            float sdif =spaceSmallCircle;
             scy = padding+radius*2+padding+sradius;
             float sw =(width-mDataSet.size()*sdif)/2;
             scx=sw+sdif/2;
